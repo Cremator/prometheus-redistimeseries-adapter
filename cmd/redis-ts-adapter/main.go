@@ -2,18 +2,20 @@ package main
 
 import (
 	"flag"
-	"github.com/go-redis/redis"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/RedisTimeSeries/prometheus-redistimeseries-adapter/internal/redis_ts"
-	"github.com/golang/protobuf/proto"
+	"github.com/go-redis/redis"
+
+	"github.com/Cremator/prometheus-redistimeseries-adapter/internal/redis_ts"
 	"github.com/golang/snappy"
 	"github.com/pkg/profile"
 	"github.com/prometheus/prometheus/prompb"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 )
 
 type config struct {
@@ -135,7 +137,7 @@ func buildClient(cfg *config) *redis_ts.Client {
 
 func serve(addr string, writer writer, reader reader) error {
 	http.HandleFunc("/write", func(w http.ResponseWriter, r *http.Request) {
-		compressed, err := ioutil.ReadAll(r.Body)
+		compressed, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.WithFields(log.Fields{"err": err.Error()}).Error("Read error")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -150,7 +152,7 @@ func serve(addr string, writer writer, reader reader) error {
 		}
 
 		var req prompb.WriteRequest
-		if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		if err := proto.Unmarshal(reqBuf, protoadapt.MessageV2Of(&req)); err != nil {
 			log.WithFields(log.Fields{"err": err.Error()}).Error("Unmarshal error")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -159,7 +161,7 @@ func serve(addr string, writer writer, reader reader) error {
 	})
 
 	http.HandleFunc("/read", func(w http.ResponseWriter, r *http.Request) {
-		compressed, err := ioutil.ReadAll(r.Body)
+		compressed, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.WithFields(log.Fields{"err": err.Error()}).Error("Read error")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -174,7 +176,7 @@ func serve(addr string, writer writer, reader reader) error {
 		}
 
 		var req prompb.ReadRequest
-		if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		if err := proto.Unmarshal(reqBuf, protoadapt.MessageV2Of(&req)); err != nil {
 			log.WithFields(log.Fields{"err": err.Error()}).Error("Unmarshal error")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -193,7 +195,7 @@ func serve(addr string, writer writer, reader reader) error {
 			return
 		}
 
-		data, err := proto.Marshal(resp)
+		data, err := proto.Marshal(protoadapt.MessageV2Of(resp))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
