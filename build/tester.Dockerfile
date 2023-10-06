@@ -7,7 +7,7 @@ RUN go version
 ENV GOPATH /go
 RUN apt update
 RUN apt install -y git
-RUN git clone --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git /go/redis-timeseries
+RUN git clone --recursive https://github.com/Cremator/RedisTimeSeries.git /go/redis-timeseries
 WORKDIR /go/redis-timeseries
 RUN ./deps/readies/bin/getpy3
 RUN ./sbin/system-setup.py
@@ -18,11 +18,11 @@ RUN set -e ;\
     echo daemonize yes > /tmp/sentinel.conf ;\
     echo sentinel monitor mymaster 127.0.0.1 6379 1 >> /tmp/sentinel.conf
 
-RUN mkdir -p /go/src/github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
-WORKDIR /go/src/github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
+RUN mkdir -p /go/src/github.com/Cremator/prometheus-redistimeseries-adapter
+WORKDIR /go/src/github.com/Cremator/prometheus-redistimeseries-adapter
 
 # This is not nessecerly the right way to do it, but it makes circleci works because it uses a remote docker host
-COPY . /go/src/github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
+COPY . /go/src/github.com/Cremator/prometheus-redistimeseries-adapter
 
 #ENTRYPOINT /bin/bash
 CMD set -e ;\

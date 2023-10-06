@@ -11,7 +11,7 @@ jobs:
       environment:
         - GOPATH: /go
 
-    working_directory: /go/src/github.com/RedisTimeSeries/prometheus-redistimeseries-adapter
+    working_directory: /go/src/github.com/Cremator/prometheus-redistimeseries-adapter
     steps:
     - setup_remote_docker
     - checkout
